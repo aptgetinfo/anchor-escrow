@@ -1,0 +1,12 @@
+[programs.localnet]
+anchor_escrow = "Fn4djF1DXaHrsausHENb6x4BaUg3o2xVmG5upAyE48X8"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "/home/panic0/.config/solana/id.json"
+
+[scripts]
+test = "yarn run mocha -t 1000000 tests/"
