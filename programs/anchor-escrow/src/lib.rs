@@ -84,14 +84,14 @@ pub mod anchor_escrow {
         token::transfer(
             ctx.accounts
                 .into_transfer_to_taker_context()
-                .with_signer(&[&authority_seeds[..]]),
+                .with_signer(&[&authority_seeds[..]]), //vault sign
             ctx.accounts.escrow_account.initializer_amount,
         )?;
 
         token::close_account(
             ctx.accounts
                 .into_close_context()
-                .with_signer(&[&authority_seeds[..]]),
+                .with_signer(&[&authority_seeds[..]]),  //close vault 
         )?;
 
         Ok(())
@@ -212,7 +212,7 @@ impl<'info> Cancel<'info> {
         };
         CpiContext::new(self.token_program.clone(), cpi_accounts)
     }
-
+//transfer tokens from vault to initializer deposit token account
     fn into_close_context(&self) -> CpiContext<'_, '_, '_, 'info, CloseAccount<'info>> {
         let cpi_accounts = CloseAccount {
             account: self.vault_account.to_account_info().clone(),
@@ -237,7 +237,7 @@ impl<'info> Exchange<'info> {
         };
         CpiContext::new(self.token_program.clone(), cpi_accounts)
     }
-
+//taker tokens to intializer recive token account
     fn into_transfer_to_taker_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let cpi_accounts = Transfer {
             from: self.vault_account.to_account_info().clone(),
@@ -246,7 +246,7 @@ impl<'info> Exchange<'info> {
         };
         CpiContext::new(self.token_program.clone(), cpi_accounts)
     }
-
+//initializer tokens from vault to taker recive token account
     fn into_close_context(&self) -> CpiContext<'_, '_, '_, 'info, CloseAccount<'info>> {
         let cpi_accounts = CloseAccount {
             account: self.vault_account.to_account_info().clone(),
