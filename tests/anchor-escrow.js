@@ -12,6 +12,7 @@ describe('anchor-escrow', () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(provider);
   const program = anchor.workspace.AnchorEscrow;
+  // program set to anchor escrow idl
   let mintA = null;
   let mintB = null;
   let initializerTokenAccountA = null;
@@ -27,9 +28,12 @@ describe('anchor-escrow', () => {
 
   const escrowAccount = anchor.web3.Keypair.generate();
   const payer = anchor.web3.Keypair.generate();
+  //deployer account
   const mintAuthority = anchor.web3.Keypair.generate();
   const initializerMainAccount = anchor.web3.Keypair.generate();
+  //initializer main account
   const takerMainAccount = anchor.web3.Keypair.generate();
+  //taker main account
 
 
 
@@ -58,16 +62,16 @@ describe('anchor-escrow', () => {
         );
         return tx;
       })(),
-      [payer]
+      [payer] //sign of payer
     );
 
     mintA = await Token.createMint(
-      provider.connection,
-      payer,
-      mintAuthority.publicKey,
-      null,
-      0,
-      TOKEN_PROGRAM_ID
+      provider.connection,   //connection
+      payer,        //signer
+      mintAuthority.publicKey,   //mint authority
+      null,          //freze authority
+      0,                //number
+      TOKEN_PROGRAM_ID   //program id
     );
 
     mintB = await Token.createMint(
@@ -86,10 +90,10 @@ describe('anchor-escrow', () => {
     takerTokenAccountB = await mintB.createAccount(takerMainAccount.publicKey);
 
     await mintA.mintTo(
-      initializerTokenAccountA,
-      mintAuthority.publicKey,
-      [mintAuthority],
-      initializerAmount
+      initializerTokenAccountA,  //to
+      mintAuthority.publicKey,   //authority
+      [mintAuthority],           //authority signature
+      initializerAmount         //amount
     );
 
     await mintB.mintTo(
@@ -122,8 +126,8 @@ describe('anchor-escrow', () => {
 
     await program.rpc.initialize(
       vault_account_bump,
-      new anchor.BN(initializerAmount),
-      new anchor.BN(takerAmount),
+      new anchor.BN(initializerAmount),   //initializer account
+      new anchor.BN(takerAmount),          //taker amount
       {
         accounts: {
           initializer: initializerMainAccount.publicKey,
@@ -144,10 +148,11 @@ describe('anchor-escrow', () => {
     );
 
     let _vault = await mintA.getAccountInfo(vault_account_pda);
-
+      //vault account details taken
     let _escrowAccount = await program.account.escrowAccount.fetch(
       escrowAccount.publicKey
     );
+    //escrow account data taken
 
     // Check that the new owner is the PDA.
     assert.ok(_vault.owner.equals(vault_authority_pda));

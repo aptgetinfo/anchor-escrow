@@ -41,12 +41,12 @@ pub mod anchor_escrow {
             AuthorityType::AccountOwner,
             Some(vault_authority),
         )?;
-
+//above give authority to vault
         token::transfer(
             ctx.accounts.into_transfer_to_pda_context(),
             ctx.accounts.escrow_account.initializer_amount,
         )?;
-
+//above transfer token form initializer to vault
         Ok(())
     }
 
