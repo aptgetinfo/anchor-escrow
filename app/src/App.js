@@ -278,6 +278,7 @@ function App() {
       <div className="App">
       {loading && <LoadingSpinner />}
         <div className="mt-4 container border border-primary">
+        <h1>Initalize Program Accounts/State</h1>
         <form className='m-4 p-4'>
   <div className="mb-3">
     <label htmlFor="initAmount" className="form-label">Initializer Pay Account</label>
