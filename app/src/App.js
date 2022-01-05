@@ -60,7 +60,6 @@ function App() {
         "confirmed"
       );
   
-      // Fund Main Accounts
       await provider.send(
         (() => {
           const tx = new Transaction();
@@ -78,16 +77,16 @@ function App() {
           );
           return tx;
         })(),
-        [payer] //sign of payer
+        [payer] 
       );
   
       mintA = await Token.createMint(
-        provider.connection,   //connection
-        payer,        //signer
-        mintAuthority.publicKey,   //mint authority
-        null,          //freze authority
-        0,                //number
-        TOKEN_PROGRAM_ID   //program id
+        provider.connection,   
+        payer,       
+        mintAuthority.publicKey,   
+        null,          
+        0,                
+        TOKEN_PROGRAM_ID   
       );
   
       mintB = await Token.createMint(
@@ -106,10 +105,10 @@ function App() {
       takerTokenAccountB = await mintB.createAccount(takerMainAccount.publicKey);
   
       await mintA.mintTo(
-        initializerTokenAccountA,  //to
-        mintAuthority.publicKey,   //authority
-        [mintAuthority],           //authority signature
-        initializerAmount         //amount
+        initializerTokenAccountA, 
+        mintAuthority.publicKey,   
+        [mintAuthority],           
+        initializerAmount         
       );
   
       await mintB.mintTo(
@@ -177,30 +176,65 @@ function App() {
       let _escrowAccount = await program.account.escrowAccount.fetch(
         escrowAccount.publicKey
       );
-    //   console.log(_vault.owner.equals(vault_authority_pda));
+      console.log(_vault.owner.equals(vault_authority_pda));
 
-    // // Check that the values in the escrow account match what we expect.
-    // console.log(_escrowAccount.initializerKey.equals(provider.wallet.publicKey));
-    // console.log(_escrowAccount.initializerAmount.toNumber() === initializerAmount);
-    // console.log(_escrowAccount.takerAmount.toNumber() === takerAmount);
-    // console.log(
-    //   _escrowAccount.initializerDepositTokenAccount.equals(initializerTokenAccountA)
-    // );
-    // console.log(
-    //   _escrowAccount.initializerReceiveTokenAccount.equals(initializerTokenAccountB)
-    // );
+    console.log(_escrowAccount.initializerKey.equals(provider.wallet.publicKey));
+    console.log(_escrowAccount.initializerAmount.toNumber() == initializerAmount);
+    console.log(_escrowAccount.takerAmount.toNumber() == takerAmount);
+    console.log(
+      _escrowAccount.initializerDepositTokenAccount.equals(initializerTokenAccountA)
+    );
+    console.log(
+      _escrowAccount.initializerReceiveTokenAccount.equals(initializerTokenAccountB)
+    );
     } catch (err) {
       console.log("Transaction error: ", err);
     }
     setLoading(false);
   }
 
+  async function exEscrow(event) {
+    event.preventDefault();
+    setLoading(true);
+    const provider = await getProvider();
+    const program = new anchor.Program(idl, programID, provider);
+    try {
+      await program.rpc.exchange({
+        accounts: {
+          taker: takerMainAccount.publicKey,
+          takerDepositTokenAccount: takerTokenAccountB,
+          takerReceiveTokenAccount: takerTokenAccountA,
+          initializerDepositTokenAccount: initializerTokenAccountA,
+          initializerReceiveTokenAccount: initializerTokenAccountB,
+          initializer: provider.wallet.publicKey,
+          escrowAccount: escrowAccount.publicKey,
+          vaultAccount: vault_account_pda,
+          vaultAuthority: vault_authority_pda,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        }
+      });
+  
+      let _takerTokenAccountA = await mintA.getAccountInfo(takerTokenAccountA);
+      let _takerTokenAccountB = await mintB.getAccountInfo(takerTokenAccountB);
+      let _initializerTokenAccountA = await mintA.getAccountInfo(initializerTokenAccountA);
+      let _initializerTokenAccountB = await mintB.getAccountInfo(initializerTokenAccountB);
+  
+      console.log(_takerTokenAccountA.amount.toNumber() == initializerAmount);
+      console.log(_initializerTokenAccountA.amount.toNumber() == 0);
+      console.log(_initializerTokenAccountB.amount.toNumber() == takerAmount);
+      console.log(_takerTokenAccountB.amount.toNumber() == 0);
+    } catch (err) {
+      console.log("Transaction error: ", err);
+    }
+    setLoading(false);
+  }
+
+
   async function cancelEscrow(event) {
     event.preventDefault();
     setLoading(true);
     const provider = await getProvider();
     const program = new anchor.Program(idl, programID, provider);
-    console.log()
     try {
       await program.rpc.cancel({
         accounts: {
@@ -212,6 +246,10 @@ function App() {
           tokenProgram: TOKEN_PROGRAM_ID,
         }
       });
+      const _initializerTokenAccountA = await mintA.getAccountInfo(initializerTokenAccountA);
+      console.log(_initializerTokenAccountA.owner.equals(provider.wallet.publicKey));
+  
+      console.log(_initializerTokenAccountA.amount.toNumber() == initializerAmount);
     } catch (err) {
       console.log("Transaction error: ", err);
     }
@@ -264,6 +302,7 @@ function App() {
         </div>
 {/* ----------------------------------------- */}
         <div className="mt-4 container border border-danger">
+        <h1>Initialize/Cancel Escrow</h1>
         <form className='m-4 p-4'>
   <div className="mb-3">
     <label htmlFor="initAmount" className="form-label">Initializer Ammount</label>
@@ -287,6 +326,35 @@ function App() {
   <button className="btn btn-primary mx-2" onClick={cancelEscrow}>Cancel Escrow</button>
 </form>
         </div>
+
+
+        {/* ----------------------------------------- */}
+
+        <div className="my-4 container border border-dark">
+        <h1>Exchange</h1>
+        <form className='m-4 p-4'>
+  <div className="mb-3">
+    <label htmlFor="initAmount" className="form-label">Initializer Ammount</label>
+    <input type="text" className="form-control" id="initAmount" aria-describedby="initAmount"  
+    placeholder="Initializer Amounts"
+    required={true}
+    value={initializerAmount} 
+    onChange={initChangeHandler}/>
+    <div  className="form-text">Enter the amount you want to store in vault.</div>
+  </div>
+  <div className="mb-3">
+    <label htmlFor="takeAmount" className="form-label">Taker Ammount</label>
+    <input type="text" className="form-control" id="takeAmount" aria-describedby="takeAmount"
+    placeholder="Taker Amounts"
+    required={true}
+    value={takerAmount}  
+    onChange={takeChangeHandler}/>
+    <div  className="form-text">Enter the amount Taker wants to store in vault.</div>
+  </div>
+  <button className="btn btn-primary mx-2" onClick={exEscrow}>Exchange Escrow</button>
+</form>
+        </div>
+
       </div>
     );
   }
