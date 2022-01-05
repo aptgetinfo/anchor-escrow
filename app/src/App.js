@@ -211,7 +211,8 @@ function App() {
           vaultAccount: vault_account_pda,
           vaultAuthority: vault_authority_pda,
           tokenProgram: TOKEN_PROGRAM_ID,
-        }
+        },
+        signers: [takerMainAccount]
       });
   
       let _takerTokenAccountA = await mintA.getAccountInfo(takerTokenAccountA);
