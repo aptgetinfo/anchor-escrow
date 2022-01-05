@@ -28,7 +28,7 @@ describe('anchor-escrow', () => {
 
   const escrowAccount = anchor.web3.Keypair.generate();
   const payer = anchor.web3.Keypair.generate();
-  //deployer account
+  //payer account just for airdroping sol
   const mintAuthority = anchor.web3.Keypair.generate();
   const initializerMainAccount = anchor.web3.Keypair.generate();
   //initializer main account

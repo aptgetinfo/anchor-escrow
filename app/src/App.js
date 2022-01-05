@@ -9,20 +9,24 @@ import { useWallet, WalletProvider, ConnectionProvider } from '@solana/wallet-ad
 import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-const wallets = [ getPhantomWallet() ]
+const wallets = [ getPhantomWallet() ];
 
 const { SystemProgram, Keypair } = web3;
-const baseAccount = Keypair.generate();
+const escrowAccount = Keypair.generate();
+const payer = Keypair.generate();
+const mintAuthority = Keypair.generate();
+const initializerMainAccount = Keypair.generate();
+const takerMainAccount = Keypair.generate();
 const opts = {
   preflightCommitment: "processed"
-}
+};
 const programID = new PublicKey(idl.metadata.address);
 
 function App() {
   const [value, setValue] = useState('');
   const [dataList, setDataList] = useState([]);
   const [input, setInput] = useState('');
-  const wallet = useWallet()
+  const wallet = useWallet();
 
   async function getProvider() {
     /* create the provider and return it to the caller */
@@ -61,7 +65,7 @@ function App() {
   }
 
   async function update() {
-    if (!input) return
+    if (!input) return;
     const provider = await getProvider();
     const program = new Program(idl, programID, provider);
     await program.rpc.update(input, {
