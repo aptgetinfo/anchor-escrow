@@ -1,13 +1,11 @@
 import './App.css';
 import { useState } from 'react';
+import LoadingSpinner from './components/LoadingSpinner'
 
-
-
+import idl from './idl.json';
 import { Connection,  PublicKey, SystemProgram, Transaction, Keypair } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, Token } from  "@solana/spl-token";
 import { Program, Provider, web3 } from '@project-serum/anchor';
-import idl from './idl.json';
-
 import { getPhantomWallet } from '@solana/wallet-adapter-wallets';
 import { useWallet, WalletProvider, ConnectionProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
@@ -38,9 +36,11 @@ const opts = {
 const programID = new PublicKey(idl.metadata.address);
 
 function App() {
-  // const [value, setValue] = useState('');
-  // const [dataList, setDataList] = useState([]);
-  // const [input, setInput] = useState('');
+  const [takerAmount, setTakerAmount] = useState();
+  const [initializerAmount, setInitializerAmount] = useState();
+  const [loading, setLoading] = useState(false);
+
+
   const wallet = useWallet();
 
   async function getProvider() {
@@ -53,9 +53,10 @@ function App() {
     return provider;
   }
 
-  async function initialize() {    
+  async function initialize(event) {
+    event.preventDefault();
+    setLoading(true);
     const provider = await getProvider();
-    /* create the program interface combining the idl, program ID, and provider */
     const program = new Program(idl, programID, provider);
     try {
       await provider.connection.confirmTransaction(
@@ -131,8 +132,17 @@ function App() {
     } catch (err) {
       console.log("Transaction error: ", err);
     }
+    setLoading(false);
   }
 
+
+  const initChangeHandler = (event) => {
+    setInitializerAmount(event.target.value);
+  };
+
+  const takeChangeHandler = (event) => {
+    setTakerAmount(event.target.value);
+  };
 
 
   if (!wallet.connected) {
@@ -144,9 +154,28 @@ function App() {
   } else {
     return (
       <div className="App">
-        <div>
-<button onClick={initialize}>Initialize</button>)
-         
+      {loading && <LoadingSpinner />}
+        <div className="container">
+        <form className='m-4 p-4'>
+  <div className="mb-3">
+    <label htmlFor="initAmount" className="form-label">Initializer Pay Account</label>
+    <input type="text" className="form-control" id="initAmount" aria-describedby="initAmount"  
+    placeholder="Initializer Amounts"
+    required={true} 
+    onChange={initChangeHandler}/>
+    <div  className="form-text">Enter the amount you want to store in vault.</div>
+  </div>
+  <div className="mb-3">
+    <label htmlFor="takeAmount" className="form-label">Taker Pay Account</label>
+    <input type="text" className="form-control" id="takeAmount" aria-describedby="takeAmount"
+    placeholder="Taker Amounts"
+    required={true}  
+    onChange={takeChangeHandler}/>
+    <div  className="form-text">Enter the amount Taker wants to store in vault.</div>
+  </div>
+  
+  <button className="btn btn-primary" onClick={initialize}>Submit</button>
+</form>
         </div>
       </div>
     );
